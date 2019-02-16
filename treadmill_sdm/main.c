@@ -87,7 +87,10 @@
 #define MODIFICATION_TYPE_AUTO   1 /* predefined value, MUST REMAIN UNCHANGED */
 
 #define OPTICAL_SENSOR_GPIO_PIN 31
-#define BELT_LENGTH             3162 /* millimeters */
+#define BELT_LENGTH 3162           /* millimeters */
+
+// This works as a way to get around constant folding, allowing the number to be replaced in the hex file.
+//static const volatile uint32_t BELT_LENGTH = 3162;           /* millimeters */
 
 APP_TIMER_DEF(m_pace_timer_id);
 void optical_sensor_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action);
