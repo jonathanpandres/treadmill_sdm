@@ -92,7 +92,7 @@
 // This works as a way to get around constant folding, allowing the number to be replaced in the hex file.
 //static const volatile uint32_t BELT_LENGTH = 3162;           /* millimeters */
 
-#define MAX_DISTANCE_BEFORE_ROLLOVER 0x3E800  /* 256 * 1000 millimeters */
+#define MAX_DISTANCE_ROLLOVER 0x3E800  /* 256 * 1000 millimeters */
 
 APP_TIMER_DEF(m_pace_timer_id);
 void optical_sensor_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action);
@@ -319,7 +319,7 @@ void optical_sensor_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t 
         // to be added at every interrupt. Now, distance is tracked and converted to 16ths of a meter only for display
         // purposes.
         distance += BELT_LENGTH;
-        distance %= MAX_DISTANCE_BEFORE_ROLLOVER;
+        distance %= MAX_DISTANCE_ROLLOVER;
 
         // Set the fields in the ANT+ SDM profile
         m_ant_sdm.SDM_PROFILE_strides += 1;
