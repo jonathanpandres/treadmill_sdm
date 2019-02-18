@@ -92,6 +92,8 @@
 // This works as a way to get around constant folding, allowing the number to be replaced in the hex file.
 //static const volatile uint32_t BELT_LENGTH = 3162;           /* millimeters */
 
+#define MAX_DISTANCE_BEFORE_ROLLOVER 0x3E418  /* 0xff * 1000, max unsigned byte * 1000 for millimeters */
+
 APP_TIMER_DEF(m_pace_timer_id);
 void optical_sensor_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action);
 
@@ -291,6 +293,8 @@ static void pace_recalc_timeout_handler(void * p_context)
 void optical_sensor_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
     static uint32_t lastTickCount = 0;
+    static uint32_t distance = 0;
+
     uint32_t currentTickCount = 0;
     uint32_t timeInMillis = 0;
     ret_code_t err_code = NRF_SUCCESS;
@@ -311,9 +315,15 @@ void optical_sensor_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t 
         err_code = app_timer_stop(m_pace_timer_id);
         APP_ERROR_CHECK(err_code);
 
+        // It occurred to me that adding the belt length directly to the SDM distance allows a error of up to 1/16 of a meter
+        // to be added at every interrupt. Now, distance is tracked and converted to 16ths of a meter only for display
+        // purposes.
+        distance += BELT_LENGTH;
+        distance %= MAX_DISTANCE_BEFORE_ROLLOVER;
+
         // Set the fields in the ANT+ SDM profile
         m_ant_sdm.SDM_PROFILE_strides += 1;
-        m_ant_sdm.SDM_PROFILE_distance += value_rescale(BELT_LENGTH, 1000, ANT_SDM_DISTANCE_UNIT_REVERSAL);
+        m_ant_sdm.SDM_PROFILE_distance = value_rescale(distance, 1000, ANT_SDM_DISTANCE_UNIT_REVERSAL);
         m_ant_sdm.SDM_PROFILE_speed = value_rescale(BELT_LENGTH, timeInMillis, ANT_SDM_SPEED_UNIT_REVERSAL);
 
         // And keep track of the last tick so we have something to compare to the next time around.
